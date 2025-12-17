@@ -20,8 +20,9 @@ type Set = {
   createdAt: string
 }
 
+// You need an experiment to track historical reference of how you improving the system
 type Experiment = {
-  name: string
+  name: string // an unique name that you're testing
   sets: Set[]
 }
 
@@ -88,6 +89,14 @@ export const saveSet = async (
   await db.write()
 }
 
+/**
+ *
+ * @param experiment the unique name of what you're testing
+ * @param task  some async function, it can be anything that gives back a result
+ * @param data an array of inputs and expected outputs with a reference that where you get the data from
+ * @param scorers an array of metrics that you want to score with the inputs and expected data.
+ * You can use sophisticated solutions like Levenshtein distance or just checking that this called the right tool or not.
+ */
 export const runEval = async <T = any>(
   experiment: string,
   {
