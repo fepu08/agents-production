@@ -27,7 +27,7 @@ const main = async () => {
   } catch (error) {
     console.error(
       `Failed to run eval${evalName ? ` '${evalName}'` : 's'}:`,
-      error
+      error,
     )
     process.exit(1)
   }

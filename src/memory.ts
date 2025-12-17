@@ -47,7 +47,7 @@ export const getMessages = async () => {
 
 export const saveToolResponse = async (
   toolCallId: string,
-  toolResponse: string
+  toolResponse: string,
 ) => {
   return addMessages([
     {

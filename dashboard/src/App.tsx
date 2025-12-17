@@ -7,11 +7,11 @@ import './App.css'
 const App = () => {
   const results = resultsData as Results
   const [selectedExperiment, setSelectedExperiment] = useState(
-    results.experiments[0].name
+    results.experiments[0].name,
   )
 
   const currentExperiment = results.experiments.find(
-    (exp) => exp.name === selectedExperiment
+    (exp) => exp.name === selectedExperiment,
   )
 
   const limitedExperiment = currentExperiment
