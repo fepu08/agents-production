@@ -90,6 +90,22 @@ export const saveSet = async (
 }
 
 /**
+ * The runEval function is used to run an evaluation experiment by calling it
+ * with an experiment name, task, data, and scoring mechanism to test
+ * the performance of a system, such as checking if an AI can correctly use a specific tool.
+ *
+ * The key components are:
+ *
+ * - an experiment name,
+ * - a task (an async function that takes an input),
+ * - data (with input and expected output),
+ * - and scorers to evaluate the performance of the task.
+ *
+ * If multiple data objects are provided,
+ * the evaluation will be run once for each data object.
+ * The final score is calculated as the average performance across
+ * all runs of the experiment.
+ *
  *
  * @param experiment the unique name of what you're testing
  * @param task  some async function, it can be anything that gives back a result
