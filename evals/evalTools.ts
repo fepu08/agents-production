@@ -146,6 +146,14 @@ export const runEval = async <T = any>(
             expected,
             reference,
             context,
+            /*
+             * You can log many other things here to be able to analyze your data better
+             * like:
+             *    - system prompt
+             *    - tool call definition
+             *
+             * So you can find the best tool name, description, etc combo
+             * */
           })
           return {
             name: score.name,
