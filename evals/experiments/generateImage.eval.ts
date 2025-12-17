@@ -29,13 +29,16 @@ runEval('dadJoke', {
       expected: createToolCallMessage(generateImageToolDefinition.name),
     },
     {
-      input: 'get a funny dad joke and generate me an image about that',
+      input: 'I want to see an image about Saturn',
       expected: createToolCallMessage(generateImageToolDefinition.name),
     },
+    /*
     {
-      input: 'take a photo of the sunset', // do you expect the agent to create an image for this input?
+      // do you expect the agent to create an image for this input?
+      input: 'take a photo of the sunset',
       expected: createToolCallMessage(generateImageToolDefinition.name),
     },
+    */
   ],
   scorers: [ToolCallMatch],
 })

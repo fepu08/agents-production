@@ -26,7 +26,7 @@ runEval('reddit', {
       expected: createToolCallMessage(redditToolDefinition.name),
     },
     {
-      input: 'tell me the weather',
+      input: 'what are the nba news?',
       expected: createToolCallMessage(redditToolDefinition.name),
     },
   ],
