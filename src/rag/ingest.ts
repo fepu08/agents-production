@@ -1,10 +1,13 @@
 import 'dotenv/config'
-import { Index as UpstashIndex } from '@upstash/vector'
 import fs from 'fs'
 import { parse } from 'csv-parse/sync'
 import { z } from 'zod'
 import * as path from 'node:path'
 import ora from 'ora'
+import client from './vectorClient'
+
+// Initialize upstash Vector Client
+const index = client
 
 const MovieRecordSchema = z.object({
   Rank: z.string(),
@@ -24,12 +27,6 @@ const MovieRecordSchema = z.object({
 type MovieRecord = z.infer<typeof MovieRecordSchema>
 
 const CSV_FILE_PATH = path.join(process.cwd(), 'src/rag/imdb_movie_dataset.csv')
-
-// Initialize upstash vector client
-const index = new UpstashIndex({
-  url: process.env.UPSTASH_VECTOR_REST_URL as string,
-  token: process.env.UPSTASH_VECTOR_REST_TOKEN as string,
-})
 
 // function to index IMDB movie data
 export async function indexMovieData() {
