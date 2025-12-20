@@ -41,9 +41,14 @@ export const addMessages = async (messages: AIMessage[]) => {
   db.data.messages.push(...messages.map(addMetadata))
 
   if (db.data.messages.length >= 10) {
-    const oldestMessages = db.data.messages.slice(0, 5).map(removeMetadata)
-    const summary = await summarizeMessages(oldestMessages)
-    db.data.summary = summary
+    let lastNum = -5
+    if (db.data.messages[db.data.messages.length + lastNum].role === 'tool') {
+      lastNum++
+    }
+    const oldestMessages = db.data.messages
+      .slice(0, lastNum)
+      .map(removeMetadata)
+    db.data.summary = await summarizeMessages(oldestMessages)
   }
 
   await db.write()
@@ -72,7 +77,7 @@ export const getSummary = async () => {
 
 export const saveToolResponse = async (
   toolCallId: string,
-  toolResponse: string
+  toolResponse: string,
 ) => {
   return addMessages([
     {
