@@ -42,8 +42,26 @@ export const runLLM = async ({
 export const summarizeMessages = async (messages: AIMessage[]) => {
   const response = await runLLM({
     messages,
-    systemPrompt: `Your job is to summarize the given messages to be used in another LLM's system prompt. 
-      Summarize it play by play.`,
+    systemPrompt: `
+    You are a summarization agent.
+
+    Your task is to summarize the provided conversation so it can be used as context
+    in another LLM’s system prompt.
+
+    Produce a concise, chronological (“play-by-play”) summary that describes:
+    - What the user was trying to do or ask
+    - How the conversation progressed
+    - Key decisions, conclusions, and outcomes
+    - Important facts, constraints, preferences, and assumptions stated by the user
+
+    Focus on meaning and intent, not exact wording.
+    Do NOT include:
+    - Verbatim quotes
+    - Message-by-message transcripts
+    - Irrelevant chit-chat or filler
+
+    The summary must be self-contained and understandable without seeing the original messages. 
+    `,
     temperature: 0.3,
   })
 

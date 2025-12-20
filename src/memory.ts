@@ -1,7 +1,9 @@
 import { JSONFilePreset } from 'lowdb/node'
 import type { AIMessage } from '../types'
 import { v4 as uuidv4 } from 'uuid'
-import { summarizeMessages } from './llm.ts'
+import { summarizeMessages } from './llm'
+
+const WINDOW_SIZE = 10
 
 export type MessageWithMetadata = AIMessage & {
   id: string
@@ -35,24 +37,35 @@ export const getDb = async () => {
   return await JSONFilePreset<Data>('db.json', defaultData)
 }
 
-export const addMessages = async (messages: AIMessage[]) => {
+export const addMessages = async (newMessages: AIMessage[]) => {
   const db = await getDb()
-  db.data.messages.push(...messages.map(addMetadata))
+  db.data.messages.push(...newMessages.map(addMetadata))
 
-  if (db.data.messages.length >= 10) {
-    //const oldestMessages = db.data.messages.slice(0, 5).map(removeMetadata)
-    //db.data.summary = await summarizeMessages(oldestMessages)
+  const messages = db.data.messages
+  const len = messages.length
 
-    let lastNum = -5
-    // if it is a tool call, we need to include the assistant response
-    // that contains the tool call ID to avoid error
-    if (db.data.messages[db.data.messages.length + lastNum].role === 'tool') {
-      lastNum++
+  // We only have a "previous window of size N" to summarize once we have at least 2N messages.
+  if (len >= 2 * WINDOW_SIZE) {
+    // Tail = raw messages we will return as-is (N, or N+1 if tool-boundary adjustment kicks in)
+    const tailStart = computeTailStartIndex(messages, WINDOW_SIZE)
+
+    // Summary window is the N messages immediately before the raw tail.
+    let summaryStart = tailStart - WINDOW_SIZE
+    let summaryEndExclusive = tailStart
+
+    // If the summary window starts with a tool response, shift start left by 1
+    // so we don't begin a summarized chunk with a tool message detached from its context.
+    if (summaryStart > 0 && messages[summaryStart]?.role === 'tool') {
+      summaryStart -= 1
     }
-    const oldestMessages = db.data.messages
-      .slice(0, lastNum)
+
+    summaryStart = Math.max(0, summaryStart)
+
+    const messagesToSummarize = messages
+      .slice(summaryStart, summaryEndExclusive)
       .map(removeMetadata)
-    db.data.summary = await summarizeMessages(oldestMessages)
+
+    db.data.summary = await summarizeMessages(messagesToSummarize)
   }
 
   await db.write()
@@ -61,17 +74,14 @@ export const addMessages = async (messages: AIMessage[]) => {
 export const getMessages = async () => {
   const db = await getDb()
   const messages = db.data.messages.map(removeMetadata)
-  const lastFive = messages.slice(-5)
 
-  // if the first message is a tool response, get one more message before it
-  if (lastFive[0]?.role === 'tool') {
-    const sixthMessage = messages[messages.length - 6]
-    if (sixthMessage) {
-      return [sixthMessage, ...lastFive]
-    }
-  }
+  const tailStart = computeTailStartIndex(messages, WINDOW_SIZE)
+  return messages.slice(tailStart)
+}
 
-  return lastFive
+export const getSummary = async () => {
+  const db = await getDb()
+  return db.data.summary
 }
 
 export const saveToolResponse = async (
@@ -87,7 +97,21 @@ export const saveToolResponse = async (
   ])
 }
 
-export const getSummary = async () => {
-  const db = await getDb()
-  return db.data.summary
+function computeTailStartIndex(
+  messages: AIMessage[],
+  keepLastN: number,
+): number {
+  const len = messages.length
+  if (len <= keepLastN) return 0
+
+  // Nominally keep the last N raw messages
+  let tailStart = len - keepLastN
+
+  // If the kept raw tail starts with a tool response, shift tailStart left by 1
+  // so the tool response is not the first raw item (we include the message before it).
+  if (messages[tailStart]?.role === 'tool') {
+    tailStart = Math.max(0, tailStart - 1)
+  }
+
+  return tailStart
 }
