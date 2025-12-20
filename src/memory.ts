@@ -40,7 +40,18 @@ export const addMessages = async (messages: AIMessage[]) => {
   db.data.messages.push(...messages.map(addMetadata))
 
   if (db.data.messages.length >= 10) {
-    const oldestMessages = db.data.messages.slice(0, 5).map(removeMetadata)
+    //const oldestMessages = db.data.messages.slice(0, 5).map(removeMetadata)
+    //db.data.summary = await summarizeMessages(oldestMessages)
+
+    let lastNum = -5
+    // if it is a tool call, we need to include the assistant response
+    // that contains the tool call ID to avoid error
+    if (db.data.messages[db.data.messages.length + lastNum].role === 'tool') {
+      lastNum++
+    }
+    const oldestMessages = db.data.messages
+      .slice(0, lastNum)
+      .map(removeMetadata)
     db.data.summary = await summarizeMessages(oldestMessages)
   }
 
