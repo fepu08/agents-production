@@ -3,6 +3,7 @@ import { openai } from './ai'
 import { zodFunction, zodResponseFormat } from 'openai/helpers/zod'
 import { systemPrompt as defaultSystemPrompt } from './systemPrompt'
 import { z } from 'zod'
+import { getSummary } from './memory.ts'
 
 export const runLLM = async ({
   messages,
@@ -16,6 +17,7 @@ export const runLLM = async ({
   systemPrompt?: string
 }) => {
   const formattedTools = tools.map(zodFunction)
+  const summary = await getSummary()
 
   const response = await openai.chat.completions.create({
     model: 'gpt-4o-mini',
@@ -23,7 +25,7 @@ export const runLLM = async ({
     messages: [
       {
         role: 'system',
-        content: systemPrompt || defaultSystemPrompt,
+        content: `${systemPrompt || defaultSystemPrompt}. Conversation so far: ${summary}`,
       },
       ...messages,
     ],
@@ -35,6 +37,17 @@ export const runLLM = async ({
   })
 
   return response.choices[0].message
+}
+
+export const summarizeMessages = async (messages: AIMessage[]) => {
+  const response = await runLLM({
+    messages,
+    systemPrompt: `Your job is to summarize the given messages to be used in another LLM's system prompt. 
+      Summarize it play by play.`,
+    temperature: 0.3,
+  })
+
+  return response.content || ''
 }
 
 export const runApprovalCheck = async (userMessage: string) => {
